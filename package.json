@@ -1,0 +1,19 @@
+{
+  "name": "Game",
+  "version": "1.0.0",
+  "description": "A prototype for storing game's data",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.13.4",
+    "socket.io": "^1.4.5"
+  },
+  "engines": {
+    "node": "4.1.x"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "Dibwe Kalangu for Umuzi",
+  "license": "ISC"
+}
