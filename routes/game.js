@@ -4,54 +4,30 @@ var routerGame = express.Router();
 /*we will always require this middleware before 
 where the user supose to be loged in */
 
-const requiresLogin = function (req,res,next){
-	if(req.session && req.session.userId){
-		console.log('User already logged in');
-		next();
+
+//routerGame.use(requiresLogin);
+ function requiresLogin(req,res,next){
+	if(typeof req.session.account !== "undefined" && req.session.user_in === true){
+		res.send(`welcome to your home page :)<br> session: ${JSON.stringify(req.session.account)} <br> user id:  ${req.session.account.userId}`);
+		
 	}else{
 		
-		console.log('you must be logged in to view this page');
+		console.log(`you must be logged in to view this page session: ${req.session.account} user id2:  ${req.session.account.userId}`);
 		
 		res.redirect('/');
-		//next();
-
-		
-		
 
 	}
 }
-routerGame.use(requiresLogin);
-routerGame.get('/',requiresLogin,function(req, res) {
+
+routerGame.get('/',[requiresLogin],function(req, res) {
 	
-	console.log("console status"+ req.requiresLogin.err.status);
-		
-		if(!req.requiresLogin.err.status===401){
-		
+	//express.static(__dirname +'/client')
+	
 			res.sendFile(__dirname + './game.html');
 		
-		}else{
-			
-			console.log(__dirname +'./login.html');
-
-			res.redirect(__dirname +'./login.html');
-			
-		}
+		
 });
 
-//get logout
 
-routerGame.get('/logout',function(req,res){
-	if(req.session){
-		//delete session object
-		req.session.destroy(function(err){
-			if(err){
-				return next(err);
-			}else{
-
-				return res.redirect('/');
-			}
-		});
-	}
-});
 module.exports = routerGame;
 

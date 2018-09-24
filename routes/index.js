@@ -6,15 +6,25 @@ const accounts = require('../models/accounts');
 const bcrypt = require('bcrypt');
 
 
-router.get('/',function(req, res) {
-	console.log(`just passed /`);
-	res.sendFile(__dirname+'/client');
+router.get('/home',function(req, res) {
 
+	if(typeof req.session.account !== "undefined" && req.session.user_in === true){
+		//delete session object
+		
+	    res.redirect('/game');
+
+	}else{
+
+	    console.log(`just passed session: ${req.session.account} user id2:  ${req.session.account.userId}`);
+		res.redirect('/');	}
+	
 
 
 });
+
+
 //user login
-router.post('/login',function(req,res){
+router.post('/login', async function(req,res){
 /*
 	1. Authenticate the user 
 	2. create a session 
@@ -34,15 +44,26 @@ router.post('/login',function(req,res){
 				return next(err);
 			}else{
 				//if no error create a session load user data in a cookies
-				req.session.account.userId = user._id;
-				return res.redirect('/game');
+				if(typeof(req.session.account) === 'undefined'){
+			
+					req.session.account ={};
+					req.session.account.user_in = true;
+					req.session.account.userId = user._id;
+					console.log(`session created ${req.session.account}`);
+					
+					
+				}
+				
+				//res.send(`This is the cookie ${req.session.account}`);
+
+				res.redirect('/game');
 			}
 		});
 
 	}else{
 		var err = new Error('All fields required.');
 		err.status = 400;
-		return next(err);
+		res.send(err);
 	}
 	//res.end();
 });
@@ -74,8 +95,6 @@ router.post('/register',async function(req,res){
     }
 }
 
-//Sign up time
-
 
 await accounts.create(userData,function(error,user){
 	if(error){
@@ -84,20 +103,35 @@ await accounts.create(userData,function(error,user){
 	res.send(`sucess ${user}`);
 	}
 }); 
-	 			
-					
 
-	
- 		
-		//res.end();
-
-  	
 
 });
 
 
 
-//
+//get logout
+
+router.get('/logout',function(req,res){
+	if(!req.session){
+		res.send(`User already logged out`);
+	}
+	if(req.session){
+		//delete session object
+		req.session.destroy(function(err){
+			if(err){
+				res.send(`could not logout user ${err}` );
+			}else{
+
+				//return res.redirect('/');
+				res.send(`user sucessfully logged out - existing session ${req.session}`);
+
+			}
+		});
+	}
+
+});
+
+
 
 function game_exist(user_id){
 	let stored_user_id = datasource.games.find({game_user_id:user_id}).toArray();
@@ -147,14 +181,14 @@ async function user_exists(email){
 				return res.redirect('/');
 			}else{
 				req.session.password = false;
-				return res.redirect('/login.html');
+				return res.redirect('/home');
 			}
 		});
 
 
 	}else{
 		console.log("User does not exist")
-		return res.redirect('/login');
+		return res.redirect('/home');
 	}
 }
 

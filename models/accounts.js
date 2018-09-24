@@ -46,7 +46,7 @@ accountSchema.statics.authenticate = function(email,password,callback){
 				err.status = 401;
 				return callback(err)
 			}
-			bcrypt.compare(passwords,user.password, function(err,result){
+			bcrypt.compare(password,user.password, function(err,result){
 				if(result == true){
 					return callback(null,user);
 

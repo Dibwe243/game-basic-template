@@ -6,6 +6,8 @@ const bodyParser = require('body-parser');
 const route = require('./routes/');
 const gameRoute = require('./routes/game');
 const db = require('./models');
+var flash = require('connect-flash');
+
 var app = express();
 var serv = require('http').Server(app);
 //const bodyParser = require('body-parser');
@@ -27,11 +29,15 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 
 
+
 app.use(session({
 		secret:'work hard',
 		resave:true,
-		saveUninitialized: true
+		saveUninitialized: true,
+		cookie: { maxAge: 60000 }
 }));
+app.use(flash());
+
 
 
 
@@ -41,9 +47,9 @@ app.use(session({
 	
 		
 app.use(express.static(__dirname +'/client'));
-
+//app.use(create_local_memory);
 app.use('/',route);
-app.use(create_local_memory);
+
 app.use('/game',gameRoute);
 
 
@@ -100,9 +106,10 @@ function update_score(data){
 //create cookies
 function create_local_memory (req,res,next){
 	
-		if(typeof(req.session.account)== 'undefined'){
+		if(typeof(req.session.account) === 'undefined'){
 			
 			req.session.account ={};
+			console.log(`session created`);
 			
 			next()
 		}
