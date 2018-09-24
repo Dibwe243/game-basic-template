@@ -1,12 +1,17 @@
 var express = require('express');
-var app = express();
-var serv = require('http').Server(app);
+
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const bodyParser = require('body-parser');
-const route = require('./routes');
+const route = require('./routes/');
 const gameRoute = require('./routes/game');
+const db = require('./models');
+var app = express();
+var serv = require('http').Server(app);
 //const bodyParser = require('body-parser');
+
+
+
 
 
 let newGame = {		
@@ -20,18 +25,25 @@ let newGame = {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+
+
 app.use(session({
 		secret:'work hard',
 		resave:true,
-		saveUninitialized: false
+		saveUninitialized: true
 }));
 
+
+
+
+
+/* Create a cooki when someone visits the page */
+	
+		
 app.use(express.static(__dirname +'/client'));
 
-
-
-
 app.use('/',route);
+app.use(create_local_memory);
 app.use('/game',gameRoute);
 
 
@@ -39,8 +51,8 @@ app.use('/game',gameRoute);
 
 var serv= app.listen(process.env.PORT || 4000);
  console.log("Server started.");
- 
 
+ 
 
 var io = require('socket.io')(serv,{});
 
@@ -85,6 +97,17 @@ function update_score(data){
 
 }
 
+//create cookies
+function create_local_memory (req,res,next){
+	
+		if(typeof(req.session.account)== 'undefined'){
+			
+			req.session.account ={};
+			
+			next()
+		}
+	
+}
 
 
 

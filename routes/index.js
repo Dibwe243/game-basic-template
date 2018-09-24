@@ -1,51 +1,57 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 
-const db = require('../models');
+const accounts = require('../models/accounts');
 const bcrypt = require('bcrypt');
 
 
-
-
-
-
-
-
-
-
-
 router.get('/',function(req, res) {
-	
-		
+	console.log(`just passed /`);
+	res.sendFile(__dirname+'/client');
 
-		res.sendFile(__dirname+'/index.html');
 
 
 });
+//user login
+router.post('/login',function(req,res){
+/*
+	1. Authenticate the user 
+	2. create a session 
+	3. Load user data within cookies
+	4. Load data game within cookies 
+	5. Load the game interface( redirect the user to the game page )
+		 
 
-async function user_exists(email){
-	return new Promise(function(resolve,reject){
-		db.accounts.findOne({email:email})
-			.then(doc=>{
-				if(doc.email===email){
-					console.log('user exist');
-					resolve(true);
-				}else{
-					console.log('User does not exist');
-					reject(false);
-				}
-			})
-			.catch(err=>{
-				
-				reject(false);
-			});
-	})
-			
-}
+
+*/
+
+	if(req.body.logemail && req.body.logpassword){
+		accounts.authenticate(req.body.logemail,req.body.logpassword, function(error,user){
+			if(error || !user){
+				var err = new Error('Wrong email or password.');
+				err.status = 401;
+				return next(err);
+			}else{
+				//if no error create a session load user data in a cookies
+				req.session.account.userId = user._id;
+				return res.redirect('/game');
+			}
+		});
+
+	}else{
+		var err = new Error('All fields required.');
+		err.status = 400;
+		return next(err);
+	}
+	//res.end();
+});
+
+
 
 //route to register user 
 
-router.post('/register', function(req,res){
+router.post('/register',async function(req,res){
 
 	// confirm that user typed same password twice
 
@@ -70,21 +76,21 @@ router.post('/register', function(req,res){
 
 //Sign up time
 
- sign_up_user(userData)
- 	.then(data=>{
- 		if(data){
-			res.send('done!');//Redirect to the game. coming soon( blanc page for now);
- 		}
- 	})
- 	.catch(err=>{
-			
 
-			res.redirect('/');//Redirect to signUp pass(failed for some raison)
+await accounts.create(userData,function(error,user){
+	if(error){
+	res.send('Oops something whent wrong '+ error);
+	}else{
+	res.send(`sucess ${user}`);
+	}
+}); 
+	 			
+					
 
- 	})
-
+	
  		
-		
+		//res.end();
+
   	
 
 });
@@ -93,7 +99,7 @@ router.post('/register', function(req,res){
 
 //
 
-async function player_game_exist(user_id){
+function game_exist(user_id){
 	let stored_user_id = datasource.games.find({game_user_id:user_id}).toArray();
 	if (stored_user_id[0]===user_id){
 		return true;
@@ -102,14 +108,34 @@ async function player_game_exist(user_id){
 	}
 }
 
+async function user_exists(email){
+	return new Promise(function(resolve,reject){
+		db.accounts.findOne({email:email})
+			.then(doc=>{
+				if(doc.email===email){
+					console.log('user exist');
+					resolve(true);
+				}else{
+					console.log('User does not exist');
+					resolve(false);
+				}
+			})
+			.catch(err=>{
+				
+				reject(err);
+			});
+	})
+			
+}
 
-/*let login users 
-	1. let check it the user exist 
-	2. if the user exist load the user data in the local memory (cookies)
-	
-*/
 
-async function login_user(user){
+
+ function login_user(user){
+ 	//check if user is logged in
+
+ 	return new Promise((resolve,reject)=>{
+
+ 	});
 	if(user_exists(user.username)){
 		let player = dataObject.accounts.find({username:user.username}).toArray();
 
@@ -145,57 +171,57 @@ async function login_user(user){
 		b. User to be added to a database
  */
 
-function sign_up_user(userData){
+ function sign_up_user(userData){
 
 return new Promise(function(resolve,reject){
 	
-	user_exists(userData.email)
+user_exists(userData.email)
 
-		.then(data=>{
+	.then(data=>{
 			
-			if(data){
-			// user  exist
+			
+			let Err = new error(`User exist!`);
+			Err.status = 401;
 							
-					reject(false);	//false :user wasn't added 	
+			next(Err);	//false :user wasn't added 	
 
-					}
-		})
+				
+	})
 
-		.catch(err=>{
+	.catch(err=>{
 
 		/* 
 			user does not exist so we add them
 			We first hash the password the add them
 		*/
-			bcrypt.hash(userData.password,10,function(err,hash){
+		bcrypt.hash(userData.password,10,async function(err,hash){
 				if(err){
 					console.log("Could not password "+err);
+					console.log("eror status "+err);
+					err = new Error('Could not hash password');
+
 					
 				}else{
 					
-							 userData.password = hash;
-							 console.log('Done creating a hash for the password '+userData.passwor);
+					userData.password = hash;
+							
+						console.log('Done creating a hash for the password '+userData.passwor);
 
 							// we insert the user
-							db.accounts.create(userData) 
+							//create user here
+					let newAccount = await accounts.create(userData,function(error,user){
+						if(!error){
+						res.send('success');
+						}else{
+							res.send(`Oops something went wrong ${err}`)
+						}
 
-
-				.then(doc=>{
-							console.log(`user created ${doc}`);
-							value = true;
-							resolve(true);//true:user was added 
-
+					})
+					
+			 	}
+		});
 							
-				})
-				.catch(err =>{
-						   console.error(`could not save ${err}`)
-						   reject(false);//false :user wasn't added 
-						   
-				});
-				}
-			});
-							
-			resolve(true);//false :user wasn't added 
+			
 
 		})
 	})

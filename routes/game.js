@@ -21,7 +21,7 @@ const requiresLogin = function (req,res,next){
 	}
 }
 routerGame.use(requiresLogin);
-routerGame.get('/game',requiresLogin,function(req, res) {
+routerGame.get('/',requiresLogin,function(req, res) {
 	
 	console.log("console status"+ req.requiresLogin.err.status);
 		
@@ -30,16 +30,16 @@ routerGame.get('/game',requiresLogin,function(req, res) {
 			res.sendFile(__dirname + './game.html');
 		
 		}else{
+			
 			console.log(__dirname +'./login.html');
 
 			res.redirect(__dirname +'./login.html');
 			
 		}
-
-
 });
 
 //get logout
+
 routerGame.get('/logout',function(req,res){
 	if(req.session){
 		//delete session object
@@ -47,6 +47,7 @@ routerGame.get('/logout',function(req,res){
 			if(err){
 				return next(err);
 			}else{
+
 				return res.redirect('/');
 			}
 		});
