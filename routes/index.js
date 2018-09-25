@@ -44,7 +44,7 @@ router.post('/login', async function(req,res){
 				return next(err);
 			}else{
 				//if no error create a session load user data in a cookies
-				if(typeof(req.session.account) === 'undefined'){
+				if(typeof(req.session.account) === 'undefined' && req.session.account.user_in !== true){
 			
 					req.session.account ={};
 					req.session.account.user_in = true;

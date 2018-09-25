@@ -5,6 +5,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const route = require('./routes/');
 const gameRoute = require('./routes/game');
+const adminRoute = require('./routes/admin');
 const db = require('./models');
 var flash = require('connect-flash');
 
@@ -43,14 +44,14 @@ app.use(flash());
 
 
 
-/* Create a cooki when someone visits the page */
 	
 		
 app.use(express.static(__dirname +'/client'));
-//app.use(create_local_memory);
-app.use('/',route);
 
-app.use('/game',gameRoute);
+app.use('/api/v1/auth',route);
+app.use('/api/v1/game',gameRoute);
+/* The route below will load all players as json for now*/
+app.use('/api/v1/admin',adminRoute)
 
 
 
