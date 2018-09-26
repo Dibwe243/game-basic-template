@@ -15,7 +15,7 @@ router.get('/home',function(req, res) {
 
 	}else{
 
-	    console.log(`just passed session: ${req.session.account} user id2:  ${req.session.account.userId}`);
+	    console.log(`Use need to login first`);
 		res.redirect('/');	}
 	
 
@@ -41,10 +41,10 @@ router.post('/login', async function(req,res){
 			if(error || !user){
 				var err = new Error('Wrong email or password.');
 				err.status = 401;
-				return next(err);
+				res.send(err.status);
 			}else{
 				//if no error create a session load user data in a cookies
-				if(typeof(req.session.account) === 'undefined' && req.session.account.user_in !== true){
+				if(typeof(req.session.account) === 'undefined'){
 			
 					req.session.account ={};
 					req.session.account.user_in = true;
@@ -54,9 +54,9 @@ router.post('/login', async function(req,res){
 					
 				}
 				
-				//res.send(`This is the cookie ${req.session.account}`);
+				res.send(`Here is the user details ${user}`);
 
-				res.redirect('/game');
+				//res.send();
 			}
 		});
 
@@ -87,7 +87,7 @@ router.post('/register',async function(req,res){
 
   if (req.body.email && req.body.username && req.body.password && req.body.passwordConf) {
 
-    var userData = {
+    var userData = { 
       email: (req.body.email),
       username: (req.body.username),
       password: (req.body.password),

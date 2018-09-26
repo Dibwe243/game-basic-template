@@ -21,7 +21,6 @@ let newGame = {
 					player_id:"",
 					score:0,
 					level:0,
-
 };
 
 // parse incoming requests
