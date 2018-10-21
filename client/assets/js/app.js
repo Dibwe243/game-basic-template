@@ -4,23 +4,24 @@
     let formsContainer = document.querySelector('.main');
     let gameScript =document.createElement('script');
     let loginForm = document.getElementsByTagName('form')[0];
+
     let flash_section = document.getElementById('snackbar');
 
 //Flash messages important to give user feedbacks
-  function flashMessages(errorStatus, message){
+  async function flashMessages(errorStatus, message){
 
     flash_section.innerHTML =message;
     flash_section.classList.add('show');
 
     //Turn color of message depending on the nature
     //green if positive  and red is error occured
-    if(errorStatus >=200 && errorStatus < 300){
+    if(errorStatus >= 200 && errorStatus < 300){
       flash_section.style.background= 'green';
     }else{
       flash_section.style.background= 'red';
     }
     //Display then hide the meaage for 3 minute
-    setTimeout(()=>{
+  await  setTimeout(()=>{
 
           flash_section.classList.remove('show');
     },3000);
@@ -73,9 +74,14 @@
 
     }
 
-    async  function initialLoad(){
-        if(! await isUserLoggedIn){
+    async function initialLoad(){
+      if(! isUserLoggedIn){
           loadForm();
+        }else{
+          removeForm();
+          await loadGame();
+          flashMessages(200, 'user already logeed in');
+
         }
 
     }
@@ -104,7 +110,7 @@
 
       await fetch('api/v1/auth/login',options)
       .then(res => res.json())
-      .then(res => console.log(res))
+      .then(res =>{  return res})
       .catch(err=> console.log('Oops something went wrong ',err.status))
     }
 
@@ -112,7 +118,8 @@
     //display the form when the page load
     document.addEventListener('DOMContentLoaded',initialLoad);
 
-    //when the login for is submited
+
+    //login form is submited
 
     loginForm.addEventListener('submit',async (e)=>{
       e.preventDefault();
@@ -123,25 +130,29 @@
         let isUserIn = await isUserLoggedIn();
          if (!isUserIn ){
               let auth = await authenticateUser(email,pass);
+              console.log('the person ',auth);
               if (auth){
                 console.log('successfull loggedIn');
-                flashMessages(200, 'successfully loggedIn');
 
                 removeForm();
                 await loadGame();
+                flashMessages(200, 'successfully loggedIn');
+
               }else{
                 console.log('Oops something went wrong could not log you in ');
                 flashMessages(401, 'Oops something went wrong could not log you in ');
 
               }
           }else{
+            removeForm();
+            await loadGame();
           console.log('user already logged in. Not you?', 'Loggout');
           flashMessages(200, 'user already logged in. Not you?', 'Loggout');
 
         }
 
       }else{
-        alert('Email or password missing');
+        //alert('Email or password missing');
         flashMessages(401, 'Email or password missing');
 
 
@@ -149,6 +160,71 @@
 
 
     });
+
+
+    let registrationForm = document.getElementsByTagName('form')[1];
+
+    function toJsonString(form){
+      let registrationObj ={};
+
+      for(var i =0; i<registrationForm.length;++i){
+        let element = registrationForm[i];
+        let name = element.name;
+        let value = element.value;
+
+        if(name){
+          registrationObj[name]=value;
+        }
+      }
+
+      return JSON.stringify(registrationObj);
+
+    }
+
+    //Registration form is submited
+    registrationForm.addEventListener('submit',async (e)=>{
+      e.preventDefault();
+      let json = toJsonString(this);
+      console.log(json);
+
+    //Register user
+
+
+    const options ={
+      method:'POST',
+      body:json,
+      headers:{
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      }
+    };
+
+    await fetch('api/v1/auth/register',options)
+    .then(res => res.json())
+    .then(user =>{
+      if(user.email){
+        console.log('registration was a success ',user)
+        flashMessages(200, 'registration was a success');
+      }else{
+        console.log('user exist ',user.code)
+        flashMessages(user.code,'User exist');
+      }
+
+
+    })
+    .catch(err=>{
+      console.log('Oops something went wrong ',err.code);
+      flashMessages(err.code, 'Oops something went wrong');
+
+    });
+
+
+
+
+      });
+
+
+
 
 
 

@@ -92,7 +92,8 @@ router.post('/register',async function(req,res){
   if (req.body.password !== req.body.passwordConf) {
     var err = new Error('Passwords do not match.');
     err.status = 400;
-    res.send("passwords dont match");
+    err.msg = 'Password don\'t match'
+    res.send(err);
     return next(err);
   }
     //validate fields
@@ -110,9 +111,10 @@ router.post('/register',async function(req,res){
 
 await accounts.create(userData,function(error,user){
 	if(error){
-	res.send('Oops something whent wrong '+ error);
+	res.send(error);
 	}else{
-	res.send(`sucess ${user}`);
+  user.code =200;
+	res.send(user);
 	}
 });
 
