@@ -7,14 +7,14 @@ let accountSchema = new mongoose.Schema({
 				type:String,
 				required:true,
 				unique:true
-				
+
 			},
 
 	email: {
 				type:String,
 				required:true,
 				unique:true
-				
+
 			},
 	password:{
 
@@ -22,16 +22,16 @@ let accountSchema = new mongoose.Schema({
 				required:true
 			}
 });
- 
 
-	 
-//authenticate input against database 
+
+
+//authenticate input against database
 
 accountSchema.statics.authenticate = function(email,password,callback){
 /*
-	1. Authenticate the user 
+	1. Authenticate the user
 
-		1. Check if user exist 
+		1. Check if user exist
 		2. Check if password is correct
 
 */
@@ -39,10 +39,13 @@ accountSchema.statics.authenticate = function(email,password,callback){
 	account.findOne({email:email})
 		.exec(function(err,user){
 			if(err){
+				console.log('there was an error from the query side');
+
 				return callback(err)
 
 			}else if(!user){
 				var err = new Error('User not found.');
+				console.log('user not found');
 				err.status = 401;
 				return callback(err)
 			}

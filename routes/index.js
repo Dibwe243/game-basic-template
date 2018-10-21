@@ -1,60 +1,72 @@
-const express = require('express');
-const router = express.Router();
-const path = require('path');
+ const express = require('express');
+ const router = express.Router();
+// const path = require('path');
 
 const accounts = require('../models/accounts');
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
 
 
 router.get('/home',function(req, res) {
 
 	if(typeof req.session.account !== "undefined" && req.session.user_in === true){
 		//delete session object
-		
+
 	    res.redirect('/game');
 
 	}else{
 
-	    console.log(`Use need to login first`);
+	    console.log(`you  need to login first`);
 		res.redirect('/');	}
-	
 
 
+
+});
+
+//check if us is logged inspect
+
+router.get('/isLoggedIn',async function(req,res){
+  if(req.session.account){
+    res.send({authenticated:true});
+  }else{
+    res.send({authenticated:false});
+  }
 });
 
 
 //user login
 router.post('/login', async function(req,res){
 /*
-	1. Authenticate the user 
-	2. create a session 
+	1. Authenticate the user
+	2. create a session
 	3. Load user data within cookies
-	4. Load data game within cookies 
+	4. Load data game within cookies
 	5. Load the game interface( redirect the user to the game page )
-		 
+
 
 
 */
-
-	if(req.body.logemail && req.body.logpassword){
-		accounts.authenticate(req.body.logemail,req.body.logpassword, function(error,user){
+console.log('here is the body ', req.body)
+	if(req.body.email && req.body.password){
+		accounts.authenticate(req.body.email,req.body.password, function(error,user){
 			if(error || !user){
 				var err = new Error('Wrong email or password.');
+        console.log('Wrong email or password.');
 				err.status = 401;
-				res.send(err.status);
+        err.msg ='Wrong email or password';
+				res.send(err);
 			}else{
 				//if no error create a session load user data in a cookies
 				if(typeof(req.session.account) === 'undefined'){
-			
+
 					req.session.account ={};
 					req.session.account.user_in = true;
 					req.session.account.userId = user._id;
 					console.log(`session created ${req.session.account}`);
-					
-					
+
+
 				}
-				
-				res.send(`Here is the user details ${user}`);
+
+				res.send(user);
 
 				//res.send();
 			}
@@ -70,7 +82,7 @@ router.post('/login', async function(req,res){
 
 
 
-//route to register user 
+//route to register user
 
 router.post('/register',async function(req,res){
 
@@ -83,11 +95,11 @@ router.post('/register',async function(req,res){
     res.send("passwords dont match");
     return next(err);
   }
-    //validate fields 
+    //validate fields
 
   if (req.body.email && req.body.username && req.body.password && req.body.passwordConf) {
 
-    var userData = { 
+    var userData = {
       email: (req.body.email),
       username: (req.body.username),
       password: (req.body.password),
@@ -102,7 +114,7 @@ await accounts.create(userData,function(error,user){
 	}else{
 	res.send(`sucess ${user}`);
 	}
-}); 
+});
 
 
 });
@@ -155,11 +167,11 @@ async function user_exists(email){
 				}
 			})
 			.catch(err=>{
-				
+
 				reject(err);
 			});
 	})
-			
+
 }
 
 
@@ -201,30 +213,30 @@ async function user_exists(email){
 
 	1. verify if the user exist using the user_exist() function.
 	2. In case the user does not exist the following should happen
-		a. Hashing of the password 
+		a. Hashing of the password
 		b. User to be added to a database
  */
 
  function sign_up_user(userData){
 
 return new Promise(function(resolve,reject){
-	
+
 user_exists(userData.email)
 
 	.then(data=>{
-			
-			
+
+
 			let Err = new error(`User exist!`);
 			Err.status = 401;
-							
-			next(Err);	//false :user wasn't added 	
 
-				
+			next(Err);	//false :user wasn't added
+
+
 	})
 
 	.catch(err=>{
 
-		/* 
+		/*
 			user does not exist so we add them
 			We first hash the password the add them
 		*/
@@ -234,11 +246,11 @@ user_exists(userData.email)
 					console.log("eror status "+err);
 					err = new Error('Could not hash password');
 
-					
+
 				}else{
-					
+
 					userData.password = hash;
-							
+
 						console.log('Done creating a hash for the password '+userData.passwor);
 
 							// we insert the user
@@ -251,15 +263,15 @@ user_exists(userData.email)
 						}
 
 					})
-					
+
 			 	}
 		});
-							
-			
+
+
 
 		})
 	})
 }
 
- 
+
 module.exports = router;

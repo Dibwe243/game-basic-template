@@ -14,4 +14,16 @@ router.get('/',function(req,res){
 		})
 });
 
+router.delete('/',(req,res)=>{
+	account.remove({_id:req.params.account_id})
+	.then(()=>{
+		res.json({message: 'Account deleted'});
+	})
+	.catch((err)=>{
+		res.send(`Oop could not delete the account ${err}`);
+	});
+});
+
+
+
 module.exports = router;
