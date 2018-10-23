@@ -47,7 +47,7 @@ app.use('/api/v1/admin',adminRoute)
 
 
 
-var serv= app.listen(process.env.PORT || 4440);
+var serv= app.listen(process.env.PORT || 4444);
  console.log("Server started.");
 
 
