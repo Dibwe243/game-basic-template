@@ -27,7 +27,7 @@ let accountSchema = new mongoose.Schema({
 
 //authenticate input against database
 
-accountSchema.statics.authenticate = function(email,password,callback){
+accountSchema.statics.authenticate = function(username,password,callback){
 /*
 	1. Authenticate the user
 
@@ -36,7 +36,7 @@ accountSchema.statics.authenticate = function(email,password,callback){
 
 */
 
-	account.findOne({email:email})
+	account.findOne({username:username})
 		.exec(function(err,user){
 			if(err){
 				console.log('there was an error from the query side');
@@ -60,7 +60,7 @@ accountSchema.statics.authenticate = function(email,password,callback){
 		});
 }
 
-//hashing a password bafore saving it to the bd
+//hashing a password before saving it to the bd
 accountSchema.pre('save',function(next){
 	var user = this;
 	bcrypt.hash(user.password, 10,function(err,hash){

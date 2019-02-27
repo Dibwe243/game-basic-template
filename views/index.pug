@@ -1,0 +1,25 @@
+extend default
+block content
+
+    block nav    
+        ul.navbar-nav
+            li.nav-item 
+                |You are logged in as #{username}, 
+                a(href="/auth/logout") logout
+            
+               
+    .container-fluid#container
+
+        
+
+        div
+            |Welcome to the home page 
+
+
+    block append scripts
+        script(src="/assets/js/setup.js")
+        script(src="/assets/js/entities.js")
+        script(src="/assets/js/game.js")
+
+
+        

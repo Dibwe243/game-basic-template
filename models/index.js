@@ -1,7 +1,7 @@
 let mongoose = require('mongoose');
 
 const server = '137.0.0.1:27017';
-const database = 'mygame';
+const database = 'mygamev2';
 
 
 mongoose.set('debug', true);

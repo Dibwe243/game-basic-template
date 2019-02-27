@@ -1,204 +1,165 @@
-(() => {
-  var config = {
-      type: Phaser.AUTO,
-      width: 800,
-      height: 600,
-      physics: {
-          default: 'arcade',
-          arcade: {
-              gravity: { y: 300 },
-              debug: false
-          }
-      },
-      scene: {
-          preload: preload,
-          create: create,
-          update: update
-      }
-  };
-
-  var player;
-  var stars;
-  var bombs;
-  var platforms;
-  var cursors;
-  var score = 0;
-  var gameOver = false;
-  var scoreText;
-
-  var game = new Phaser.Game(config);
-  var socket = io();
-
-  function preload ()
-  {
-      this.load.image('sky', 'assets/sky.png');
-      this.load.image('ground', 'assets/platform.png');
-      this.load.image('star', 'assets/star.png');
-      this.load.image('bomb', 'assets/bomb.png');
-      this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
-  }
-
-  function create ()
-  {
-      //  A simple background for our game
-      this.add.image(400, 300, 'sky');
-
-      //  The platforms group contains the ground and the 2 ledges we can jump on
-      platforms = this.physics.add.staticGroup();
-
-      //  Here we create the ground.
-      //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-      platforms.create(400, 568, 'ground').setScale(2).refreshBody();
-
-      //  Now let's create some ledges
-      platforms.create(600, 400, 'ground');
-      platforms.create(50, 250, 'ground');
-      platforms.create(750, 220, 'ground');
-
-      // The player and its settings
-      player = this.physics.add.sprite(100, 450, 'dude');
-
-      //  Player physics properties. Give the little guy a slight bounce.
-      player.setBounce(0.2);
-      player.setCollideWorldBounds(true);
-
-      //  Our player animations, turning, walking left and walking right.
-      this.anims.create({
-          key: 'left',
-          frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
-          frameRate: 10,
-          repeat: -1
-      });
-
-      this.anims.create({
-          key: 'turn',
-          frames: [ { key: 'dude', frame: 4 } ],
-          frameRate: 20
-      });
-
-      this.anims.create({
-          key: 'right',
-          frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
-          frameRate: 10,
-          repeat: -1
-      });
-
-      //  Input Events
-      cursors = this.input.keyboard.createCursorKeys();
-
-      //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
-      stars = this.physics.add.group({
-          key: 'star',
-          repeat: 11,
-          setXY: { x: 12, y: 0, stepX: 70 }
-      });
-
-      stars.children.iterate(function (child) {
-
-          //  Give each star a slightly different bounce
-          child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
-
-      });
-
-      bombs = this.physics.add.group();
-
-      //  The score
-      scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
-
-      //  Collide the player and the stars with the platforms
-      this.physics.add.collider(player, platforms);
-      this.physics.add.collider(stars, platforms);
-      this.physics.add.collider(bombs, platforms);
-
-      //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-      this.physics.add.overlap(player, stars, collectStar, null, this);
-
-      this.physics.add.collider(player, bombs, hitBomb, null, this);
-  }
-
-  function update ()
-  {
-      if (gameOver)
-      {
-          return;
-      }
-
-      if (cursors.left.isDown)
-      {
-          player.setVelocityX(-160);
-
-          player.anims.play('left', true);
-      }
-      else if (cursors.right.isDown)
-      {
-          player.setVelocityX(160);
-
-          player.anims.play('right', true);
-      }
-      else
-      {
-          player.setVelocityX(0);
-
-          player.anims.play('turn');
-      }
-
-      if (cursors.up.isDown && player.body.touching.down)
-      {
-          player.setVelocityY(-330);
-      }
-  }
-
-  function collectStar (player, star)
-  {
-      star.disableBody(true, true);
-
-      //  Add and update the score
-      score += 10;
-      scoreText.setText('Score: ' + score);
-
-      if (stars.countActive(true) === 0)
-      {
-          //  A new batch of stars to collect
-          stars.children.iterate(function (child) {
-
-              child.enableBody(true, child.x, 0, true, true);
-
-          });
-
-          var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-
-          var bomb = bombs.create(x, 16, 'bomb');
-          bomb.setBounce(1);
-          bomb.setCollideWorldBounds(true);
-          bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-          bomb.allowGravity = false;
-
-      }
-  }
-
-  function hitBomb (player, bomb)
-  {
-      var location ={};
-      var player_data ={};
-      location.x = player.x;
-      location.y =player.y;
-      player_data.location = location;
-      player_data.score = score;
-
-      this.physics.pause();
-
-      player.setTint(0xff0000);
-
-      player.anims.play('turn');
-
-      gameOver = true;
-      player_data.gameOver = gameOver;
-
-      socket.emit('bombed',{data:player_data});
-      console.log("Game over Last location:{"+location.x +","+location.y+"}" );
-      console.log("Accumulated points :"+score);
-  }
 
 
+var ctx = document.getElementById("ctx").getContext("2d"); 
 
-  })()
+
+ctx.font = '30px Arial';
+
+var HEIGHT = 800;
+var WIDTH = 1250;
+var timeWhenGameStarted = Date.now();	//return time in ms
+
+var frameCount = 0;
+
+var score = 0;
+
+var Img = {};
+Img.player = new Image();
+Img.player.src = "assets/img/player.png";
+Img.enemy = new Image();
+Img.enemy.src = 'assets/img/enemy.png';
+Img.bullet = new Image();
+Img.bullet.src = 'assets/img/bullet.png';
+Img.upgrade1 = new Image();
+Img.upgrade1.src = 'assets/img/upgrade1.png';
+Img.upgrade2 = new Image();
+Img.upgrade2.src = 'assets/img/upgrade2.png';
+Img.map = new Image();
+Img.map.src = 'assets/img/map.png';
+
+
+testCollisionRectRect = function(rect1,rect2){
+	return rect1.x <= rect2.x+rect2.width 
+		&& rect2.x <= rect1.x+rect1.width
+		&& rect1.y <= rect2.y + rect2.height
+		&& rect2.y <= rect1.y + rect1.height;
+}
+
+document.onclick = function(mouse){
+	player.performAttack();
+}
+
+document.oncontextmenu = function(mouse){
+	player.performSpecialAttack();
+	mouse.preventDefault();
+}
+
+document.onmousemove = function(mouse){
+	var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
+	var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
+	
+	mouseX -= player.x;
+	mouseY -= player.y;
+	
+	player.aimAngle = Math.atan2(mouseY,mouseX) / Math.PI * 180;
+}
+
+document.onkeydown = function(event){
+	if(event.keyCode === 68)	//d
+		player.pressingRight = true;
+	else if(event.keyCode === 83)	//s
+		player.pressingDown = true;
+	else if(event.keyCode === 65) //a
+		player.pressingLeft = true;
+	else if(event.keyCode === 87) // w
+		player.pressingUp = true;
+}
+
+document.onkeyup = function(event){
+	if(event.keyCode === 68)	//d
+		player.pressingRight = false;
+	else if(event.keyCode === 83)	//s
+		player.pressingDown = false;
+	else if(event.keyCode === 65) //a
+		player.pressingLeft = false;
+	else if(event.keyCode === 87) // w
+		player.pressingUp = false;
+}
+
+update = function(){
+	ctx.clearRect(0,0,WIDTH,HEIGHT);
+	frameCount++;
+	score++;
+	
+	if(frameCount % 100 === 0)	//every 4 sec
+		randomlyGenerateEnemy();
+
+	if(frameCount % 75 === 0)	//every 3 sec
+		randomlyGenerateUpgrade();
+	
+	
+	
+	for(var key in bulletList){
+		bulletList[key].update();
+		
+		var toRemove = false;
+		bulletList[key].timer++;
+		if(bulletList[key].timer > 75){
+			toRemove = true;
+		}
+		
+		for(var key2 in enemyList){
+			/*
+			var isColliding = bulletList[key].testCollision(enemyList[key2]);
+			if(isColliding){
+				toRemove = true;
+				delete enemyList[key2];
+				break;
+			}	
+			*/
+		}
+		if(toRemove){
+			delete bulletList[key];
+		}
+	}
+	
+	for(var key in upgradeList){
+		upgradeList[key].update();
+		var isColliding = player.testCollision(upgradeList[key]);
+		if(isColliding){
+			if(upgradeList[key].category === 'score')
+				score += 1000;
+			if(upgradeList[key].category === 'atkSpd')
+				player.atkSpd += 3;
+			delete upgradeList[key];
+		}
+	}
+	
+	for(var key in enemyList){
+		enemyList[key].update();
+		enemyList[key].performAttack();
+		
+		var isColliding = player.testCollision(enemyList[key]);
+		if(isColliding){
+			player.hp = player.hp - 1;
+		}
+	}
+	if(player.hp <= 0){
+		var timeSurvived = Date.now() - timeWhenGameStarted;		
+		console.log("You lost! You survived for " + timeSurvived + " ms.");		
+		startNewGame();
+	}
+	player.update();
+	
+	ctx.fillText(player.hp + " Hp",0,30);
+	ctx.fillText('Score: ' + score,200,30);
+}
+
+startNewGame = function(){
+	player.hp = 10;
+	timeWhenGameStarted = Date.now();
+	frameCount = 0;
+	score = 0;
+	enemyList = {};
+	upgradeList = {};
+	bulletList = {};
+	randomlyGenerateEnemy();
+	randomlyGenerateEnemy();
+	randomlyGenerateEnemy();
+	
+}
+
+player = Player();
+startNewGame();
+
+setInterval(update,40);

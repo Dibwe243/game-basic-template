@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "A prototype for storing game's data",
   "main": "app.js",
+  "scripts": {
+    "start": "node app.js --W",
+    "dev": "nodemon app.js"
+  },
   "dependencies": {
     "assert": "^1.4.1",
     "bcrypt": "^3.0.0",
@@ -12,19 +16,14 @@
     "express-session": "^1.15.6",
     "mongodb": "^2.2.33",
     "mongoose": "^5.2.15",
+    "pug": "^2.0.3",
     "socket.io": "^1.4.5",
     "validator": "^10.7.1"
   },
   "engines": {
     "node": "4.1.x"
   },
-  "devDependencies": {
-    "nodemon": "^1.18.4"
-  },
-  "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
-  },
+  "devDependencies": {},
   "author": "Dibwe Kalangu for Umuzi",
   "license": "ISC"
 }
